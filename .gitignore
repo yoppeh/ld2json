@@ -1,0 +1,4 @@
+ld2json
+*.o
+compile_commands.json
+.cache
