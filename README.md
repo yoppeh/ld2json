@@ -87,7 +87,8 @@ Array:
 ```
 
 LD data can be indented without indenting the output. If a key field starts with
-a number of spaces, that number of spaces is removed frome the data:
+a number of spaces, that number of spaces is removed frome the beginning of each
+line of data:
 ```
 ~~:{
 ~~:$some_key
