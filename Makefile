@@ -74,9 +74,9 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install : md2jl
-	install -m 755 md2jl $(prefix)/bin
+install : ld2json
+	install -m 755 ld2json $(prefix)/bin
 
 uninstall :
-	- rm -f $(prefix)/bin/md2jl
+	- rm -f $(prefix)/bin/ld2json
 
