@@ -98,10 +98,10 @@ Some key.
 ```
 
 The output would be:
-{"some_key":"Some key.","child_object":{"key":"Data for this key is indented by
+`{"some_key":"Some key.","child_object":{"key":"Data for this key is indented by
 four spaces, for readability."},"another_key":"    In this case, the key
 specification isn't indented, so the four spaces at\n    the start of these
-lines is kept."}
+lines is kept."}`
 
 Except for the aforementioned indentation feature, the complete removal of
 blank lines and the stripping of ending line feeds (and carriage returns), no
