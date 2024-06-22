@@ -150,10 +150,10 @@ static char *get_line(void) {
     if (r == NULL) {
         return NULL;
     }
-    char *lp = line + strlen(line) - 1;;
+/*    char *lp = line + strlen(line) - 1;;
     while (lp >= line && (*lp == '\n' || *lp == '\r')) {
         *lp-- = '\0';;
-    }
+    } */
     line_number++;
     return r;
 }
@@ -209,6 +209,10 @@ static json_object *parse_array(void) {
             }
             debug("got key \"%s\"\n", lp);
             if (data != NULL) {
+                char *e = data + strlen(data) - 1;
+                while (e >= data && isspace(*e)) {
+                    *e-- = '\0';
+                }
                 if (key[0] != key_comment) {
                     debug("data = \"%s\"\n", data);
                     switch (key[0]) {
@@ -330,6 +334,10 @@ static json_object *parse_object(void) {
                 debug("Inserting key \"%s\" with datatype %c\n", key + 1, key[0]);
                 if (key[0] != key_comment) {
                     if (data != NULL) {
+                        char *e = data + strlen(data) - 1;
+                        while (e >= data && isspace(*e)) {
+                            *e-- = '\0';
+                        }
                         debug("data = \"%s\"\n", data);
                         switch (key[0]) {
                             case key_boolean:

@@ -14,8 +14,8 @@ worry about column separators and escaping CSV files.
 LD is line-oriented. Keys are defined on a line. The following lines contain the
 data that should be assigned to that key. The data section ends at the next key.
 
-Blank lines are not output. New lines in the output can be explicitly specified
-with "\n", which will be output.
+Blank lines are not output. New lines in the input are converted to "\n" in the
+output. The final new line at the end of the data section is removed.
 
 ## Details
 
