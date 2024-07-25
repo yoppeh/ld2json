@@ -46,7 +46,6 @@ static char *indent_string = "                                                  
 static FILE *fp = NULL;
 static long int line_number = 0;
 
-static void free_object(json_object *obj);
 static char *get_key(char *line);
 static char *get_line(void);
 static void insert_key_value(json_object *obj, char *key, json_object *value);
@@ -75,13 +74,13 @@ int main(int ac, char **av) {
                 in_comment = false;
                 json_object *object = parse_object();
                 output_object(object);
-                free_object(object);
+                json_object_put(object);
             } else if (lp[key_type_position] == key_start_array) {
                 debug("got array\n");
                 in_comment = false;
                 json_object *array = parse_array();
                 output_object(array);
-                free_object(array);
+                json_object_put(array);
             } else if (lp[key_type_position] == key_comment) {
                 debug("got comment\n");
                 in_comment = true;
@@ -92,10 +91,6 @@ int main(int ac, char **av) {
         }
     }
     debug_return 0;
-}
-
-static void free_object(json_object *obj) {
-    json_object_put(obj);
 }
 
 static char *get_key(char *line) {
