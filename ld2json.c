@@ -1,5 +1,5 @@
 /**
- * @file main.c
+ * @file ld2json.c
  * @author Warren Mann (warren@nonvol.io)
  * @brief Main program module.
  * @version 0.1.0
@@ -42,12 +42,8 @@ static char *indent_string = "                                                  
 #define key_comment '*'
 #define key_escape '\\'
 #define key_type_position (sizeof(key_prefix) - 1)
-#define stack_start 64
 
 static FILE *fp = NULL;
-static void **stack = NULL;
-static long int stack_index = 0;
-static long int stack_size = 0;
 static long int line_number = 0;
 
 static void free_object(json_object *obj);
@@ -55,11 +51,10 @@ static char *get_key(char *line);
 static char *get_line(void);
 static void insert_key_value(json_object *obj, char *key, json_object *value);
 static bool is_blank(char *line);
+static bool is_real(const char *s);
 static void output_object(json_object *obj);
 static json_object *parse_array(void);
 static json_object *parse_object(void);
-static void *pop(void);
-static int push(void *p);
 static bool valid_number(const char *s);
 
 int main(int ac, char **av) {
@@ -67,12 +62,6 @@ int main(int ac, char **av) {
     char *line;
     bool in_comment = false;
     fp = stdin;
-    stack_size = stack_start;
-    stack = malloc(stack_size * sizeof(void *));
-    if (stack == NULL) {
-        fprintf(stderr, "Memory allocation error\n");
-        return 1;
-    }
     while ((line = get_line()) != NULL) {
         debug("read line %li: \"%s\"\n", line_number, line);
         char *lp = line;
@@ -102,18 +91,11 @@ int main(int ac, char **av) {
             }
         }
     }
-    if (stack != NULL) {
-        free(stack);
-    }
     debug_return 0;
 }
 
 static void free_object(json_object *obj) {
-/*    void *vp;
     json_object_put(obj);
-    while ((vp = pop()) != NULL) {
-        free(vp);
-    } */
 }
 
 static char *get_key(char *line) {
@@ -181,6 +163,23 @@ static bool is_blank(char *line) {
     return false;
 }
 
+static bool is_real(const char *s) {
+    const char *p = s;
+    bool have_dec = false;
+    while (*p != '\0') {
+        if (*p == '.') {
+            have_dec = true;
+        }
+        if (have_dec && isdigit(*p)) {
+            if (*p > '0') {
+                return true;
+            }
+        }
+        p++;
+    }
+    return false;
+}
+
 static void output_object(json_object *obj) {
     if (obj != NULL) {
         printf("%s\n", json_object_to_json_string(obj));
@@ -222,17 +221,12 @@ static json_object *parse_array(void) {
                                 debug_return NULL;
                             }
                             value = json_object_new_boolean(strcasecmp(data, "true") == 0);
-                            if (push(data) != 0) {
-                                debug_return NULL;
-                            }
                             break;
                         case key_null:
                             if (strcasecmp(data, "null") != 0) {
                                 fprintf(stderr, "Invalid null value \"%s\" on line %li\n", data, line_number);
                                 debug_return NULL;
                             }
-                            free(data);
-                            data = NULL;
                             value = NULL;
                             break;
                         case key_number:
@@ -240,20 +234,17 @@ static json_object *parse_array(void) {
                                 fprintf(stderr, "Invalid number value \"%s\" on line %li\n", data, line_number);
                                 debug_return NULL;
                             }
-                            if (push(data) != 0) {
-                                debug_return NULL;
-                            }
                             value = json_object_new_double(atof(data));
                             break;
                         default:
                             debug("adding data as string \"%s\"\n", data);
                             value = json_object_new_string(data);
-                            if (push(data) != 0) {
-                                debug_return NULL;
-                            }
                             break;
                     }
-                    data = NULL;
+                    if (data) {
+                        free(data);
+                        data = NULL;
+                    }
                     json_object_array_add(array, value);
                 } else {
                     free(data);
@@ -361,10 +352,11 @@ static json_object *parse_object(void) {
                                     fprintf(stderr, "Invalid number value \"%s\" on line %li\n", data, line_number);
                                     debug_return NULL;
                                 }
-                                if (push(data) != 0) {
-                                    debug_return NULL;
+                                if (is_real(data)) {
+                                    value = json_object_new_double(atof(data));
+                                } else {
+                                    value = json_object_new_int(atoi(data));
                                 }
-                                value = json_object_new_double(atof(data));
                                 break;
                             default:
                                 debug("adding data as string \"%s\"\n", data);
@@ -372,21 +364,20 @@ static json_object *parse_object(void) {
                                 break;
                         }
                         if (data != NULL) {
-                            if (push(data) != 0) {
-                                return NULL;
-                            }
+                            free(data);
                             data = NULL;
                         }
                     }
                     insert_key_value(object, key, value);
-                    if (push(key) != 0) {
-                        debug_return NULL;
-                    }
+                    free(key);
+                    key = NULL;
                 } else {
                     if (data != NULL) {
                         free(data);
                         data = NULL;
                     }
+                    free(key);
+                    key = NULL;
                 }
             }
             key = get_key(line);
@@ -429,27 +420,6 @@ static json_object *parse_object(void) {
     }
     fprintf(stderr, "Unexpected EOF on line %li\n", line_number);
     debug_return NULL;
-}
-
-static void *pop(void) {
-    if (stack_index == 0) {
-        return NULL;
-    }
-    return stack[--stack_index];
-}
-
-static int push(void *p) {
-    stack[stack_index++] = p;
-    if (stack_index >= stack_size) {
-        stack_size *= 2;
-        void **n = realloc(stack, stack_size * sizeof(void *));
-        if (n == NULL) {
-            fprintf(stderr, "Memory allocation error on line %li\n", line_number);
-            return 1;
-        }
-        stack = n;
-    }
-    return 0;
 }
 
 static bool valid_number(const char *s) {

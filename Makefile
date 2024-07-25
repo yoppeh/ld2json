@@ -51,8 +51,6 @@ endif
 
 LIBS = -ljson-c
 
-OBJS = main.o
-
 .PHONY: all bear clean install uninstall
 
 all: ld2json
@@ -65,7 +63,7 @@ clean:
 	- rm -f ld2json
 	- rm -f *.o
 
-ld2json : $(OBJS)
+ld2json : ld2json.o
 	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
 ifndef debug
 	strip $@
