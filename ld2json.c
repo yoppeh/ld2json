@@ -353,9 +353,9 @@ static json_object *parse_object(void) {
                                     debug_return NULL;
                                 }
                                 if (is_real(data)) {
-                                    value = json_object_new_double(atof(data));
+                                    value = json_object_new_double(strtod(data, NULL));
                                 } else {
-                                    value = json_object_new_int(atoi(data));
+                                    value = json_object_new_int(strtol(data, NULL, 10));
                                 }
                                 break;
                             default:
@@ -440,13 +440,13 @@ static bool valid_number(const char *s) {
     if (s[i] != '.' && s[i] != '+' && s[i] != '-' && !(s[i] >= '0' && s[i] <= '9')) {
         return false;
     }
-    bool flagDotOrE = false;
+    bool dot_or_e = false;
     for (; i <= j; i++) {
         if (s[i] != 'e' && s[i] != '.' && s[i] != '+' && s[i] != '-' && !(s[i] >= '0' && s[i] <= '9')) {
             return false;
         }
         if (s[i] == '.') {
-            if (flagDotOrE == true) {
+            if (dot_or_e == true) {
                 return false;
             }
             if (i + 1 > l) {
@@ -457,7 +457,7 @@ static bool valid_number(const char *s) {
             }
         }
         else if (s[i] == 'e') {
-            flagDotOrE = true;
+            dot_or_e = true;
             if (!(s[i - 1] >= '0' && s[i - 1] <= '9')) {
                 return false;
             }
