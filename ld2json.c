@@ -343,8 +343,6 @@ static json_object *parse_object(void) {
                                     fprintf(stderr, "Invalid null value \"%s\" on line %li\n", data, line_number);
                                     debug_return NULL;
                                 }
-                                free(data);
-                                data = NULL;
                                 value = NULL;
                                 break;
                             case key_number:
@@ -363,12 +361,12 @@ static json_object *parse_object(void) {
                                 value = json_object_new_string(data);
                                 break;
                         }
-                        if (data != NULL) {
-                            free(data);
-                            data = NULL;
-                        }
                     }
                     insert_key_value(object, key, value);
+                    if (data != NULL) {
+                        free(data);
+                        data = NULL;
+                    }
                     free(key);
                     key = NULL;
                 } else {
