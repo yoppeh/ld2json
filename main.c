@@ -150,10 +150,10 @@ static char *get_line(void) {
     if (r == NULL) {
         return NULL;
     }
-    char *lp = line + strlen(line) - 1;;
+    char *lp = line + strlen(line) - 1;
     while (lp >= line && (*lp == '\n' || *lp == '\r')) {
-        *lp-- = '\0';;
-    } 
+        *lp-- = '\0';
+    }
     line_number++;
     return r;
 }
