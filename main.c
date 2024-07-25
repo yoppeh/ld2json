@@ -109,11 +109,11 @@ int main(int ac, char **av) {
 }
 
 static void free_object(json_object *obj) {
-    void *vp;
+/*    void *vp;
     json_object_put(obj);
     while ((vp = pop()) != NULL) {
         free(vp);
-    }
+    } */
 }
 
 static char *get_key(char *line) {
@@ -139,7 +139,7 @@ static char *get_key(char *line) {
     k = strdup(s);
     if (k == NULL) {
         fprintf(stderr, "Memory allocation error on line %li\n", line_number);
-        debug_return NULL;;
+        debug_return NULL;
     }
     debug_return k;
 }
@@ -395,6 +395,7 @@ static json_object *parse_object(void) {
             } else if (lp[key_type_position] == key_start_array) {
                 value = parse_array();
             } else if (lp[key_type_position] == key_end_obj) {
+                debug("returning object\n");
                 debug_return object;
             }
         } else {
