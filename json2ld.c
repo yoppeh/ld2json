@@ -65,7 +65,6 @@ int main(int ac, char **av) {
     for (int i = 1; i < ac; i++) {
         if (strcmp(av[i], "-h") == 0) {
             fprintf(stderr, "Usage: %s [file]\n", av[0]);
-            fprintf(stderr, "-p ..... Pretty print output\n");
             fprintf(stderr, "file ... Input file\n");
             debug_return 0;
         } else if (fp == stdin) {

@@ -67,8 +67,8 @@ int main(int ac, char **av) {
             opt_pretty = true;
         } else if (strcmp(av[i], "-h") == 0) {
             fprintf(stderr, "Usage: %s [-p] [file]\n", av[0]);
-            fprintf(stderr, "  -p  Pretty print output\n");
-            fprintf(stderr, "  file  Input file\n");
+            fprintf(stderr, "-p ..... Pretty print output\n");
+            fprintf(stderr, "file ... Input file\n");
             debug_return 0;
         } else if (fp == stdin) {
             fp = fopen(av[i], "r");
