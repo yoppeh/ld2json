@@ -80,18 +80,22 @@ int main(int ac, char **av) {
         json_obj = json_tokener_parse_ex(tok, line, strlen(line));
         jerr = json_tokener_get_error(tok);
         if (jerr == json_tokener_success) {
-            output_ld(empty_string, json_obj);
-            json_object_put(json_obj);
-            json_obj = NULL;
+            if (json_obj != NULL) {
+                output_ld(empty_string, json_obj);
+                json_object_put(json_obj);
+                json_obj = NULL;
+            }
         } else if (jerr != json_tokener_continue) {
             fprintf(stderr, "Error: %s\n", json_tokener_error_desc(jerr));
             debug_return(1);
         }
     }
     if (jerr == json_tokener_continue && json_obj != NULL) {
-        output_ld(empty_string, json_obj);
-        json_object_put(json_obj);
-        json_obj = NULL;
+        if (json_obj != NULL) {
+            output_ld(empty_string, json_obj);
+            json_object_put(json_obj);
+            json_obj = NULL;
+        }
     }
     debug_return 0;
 }
@@ -102,6 +106,10 @@ static void output_ld(const char *key, json_object *obj) {
     char *k;
     char *s;
     json_object *val;
+    if (obj == NULL) {
+        fprintf(stderr, "Error: NULL object\n");
+        debug_return;
+    }
     switch (json_object_get_type(obj)) {
         case json_type_array:
             printf("%*s~~:%c%s\n", indent, " ", key_start_array, key);
@@ -135,9 +143,13 @@ static void output_ld(const char *key, json_object *obj) {
             break;
         case json_type_string:
             s = wrap(json_object_get_string(obj), wrap_len, indent);
-            printf("%*s~~:%c%s\n%s\n", indent, " ", key_string, key, s);
-            free(s);
-            s = NULL;
+            if (s != NULL) {
+                printf("%*s~~:%c%s\n%s\n", indent, " ", key_string, key, s);
+                free(s);
+                s = NULL;
+            } else {
+                printf("%*s~~:%c%s\n%s\n", indent, " ", key_string, key, empty_string);
+            }
             break;
         default:
             break;
@@ -146,47 +158,55 @@ static void output_ld(const char *key, json_object *obj) {
 }
 
 static char *wrap(const char *s, int width, int indent) {
-    int len = strlen(s);
-    int bufsize = len + ((len / width) * (width + indent + 3)) + (len % width) + indent + 3;
-    char *result = (char *)malloc(bufsize);
-    if (!result) {
+    debug_enter();
+    if (indent >= width) {
+        fprintf(stderr, "Error: indent must be less than width\n");
         debug_return NULL;
     }
-    char *p = result;
-    const char *line_start = s;
-    int line_len = 0;
-    while (*s) {
-        if (line_len == 0) {
-            memset(p, ' ', indent);
-            p += indent;
-            line_len += indent;
+    int sl = strlen(s);
+    int rl = sl;
+    int bl = ((sl / (width / 4)) * (width + indent + 2)) + (sl % width) + indent + 1;
+    char *r = (char *)malloc(bl);
+    if (!r) {
+        debug_return NULL;
+    }
+    memset(r, ' ', bl);
+    debug("string len = %d", sl);
+    debug("buffer size = %d", bl);
+    char *p = r;
+    int ll = 0;
+    int l;
+    while (1) {
+        p += indent;
+        ll = width - indent;
+        if (rl <= ll) {
+            strcpy(p, s);
+            break;
         }
-        const char *word_end = s;
-        while (*word_end && !isspace(*word_end)) {
-            word_end++;
+        const char *e = s + ll - 1;
+        while (e > s && !isspace(*e)) {
+            e--;
         }
-        int word_len = word_end - s;
-        if (line_len + word_len <= width) {
-            memcpy(p, s, word_len);
-            p += word_len;
-            line_len += word_len;
-            s = word_end;
-            while (*s && isspace(*s)) {
-                if (*s == '\n') {
-                    *p++ = '\n';
-                    line_len = 0;
-                } else {
-                    *p++ = *s;
-                    line_len++;
-                }
-                s++;
+        if (e == s) {
+            e = s + ll;
+        }
+        l = e - s + 1;
+        for (int j = 0; j < l; j++) {
+            if (s[j] == '\n') {
+                *p++ = '\\';
+                *p++ = 'n';
+                l--;
+            } else {
+                *p++ = s[j];
             }
-        } else {
-            *p++ = '\n';
-            line_len = 0;
-            line_start = s;
+        }
+        rl -= l;
+        *p++ = '\n';
+        s = e + 1;
+        if (*s == '\0') {
+            break;
         }
     }
-    *p = '\0';
-    debug_return result;
+    debug("result length = %ld", strlen(r));
+    debug_return r;
 }
