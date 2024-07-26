@@ -45,6 +45,7 @@ static char *indent_string = "                                                  
 
 static FILE *fp = NULL;
 static long int line_number = 0;
+static bool opt_pretty = false;
 
 static char *get_key(char *line);
 static char *get_line(void);
@@ -61,6 +62,22 @@ int main(int ac, char **av) {
     char *line;
     bool in_comment = false;
     fp = stdin;
+    for (int i = 1; i < ac; i++) {
+        if (strcmp(av[i], "-p") == 0) {
+            opt_pretty = true;
+        } else if (strcmp(av[i], "-h") == 0) {
+            fprintf(stderr, "Usage: %s [-p] [file]\n", av[0]);
+            fprintf(stderr, "  -p  Pretty print output\n");
+            fprintf(stderr, "  file  Input file\n");
+            debug_return 0;
+        } else if (fp == stdin) {
+            fp = fopen(av[i], "r");
+            if (fp == NULL) {
+                fprintf(stderr, "Unable to open file \"%s\"\n", av[i]);
+                debug_return 1;
+            }
+        }
+    }
     while ((line = get_line()) != NULL) {
         debug("read line %li: \"%s\"\n", line_number, line);
         char *lp = line;
@@ -177,7 +194,15 @@ static bool is_real(const char *s) {
 
 static void output_object(json_object *obj) {
     if (obj != NULL) {
-        printf("%s\n", json_object_to_json_string(obj));
+        if (opt_pretty) {
+            char *t = "\n";
+            if (json_object_get_type(obj) == json_type_object) {
+                t = ",\n";
+            }
+            printf("%s%s", json_object_to_json_string_ext(obj, JSON_C_TO_STRING_PRETTY), t);
+        } else {
+            printf("%s\n", json_object_to_json_string(obj));
+        }
     }
 }
 

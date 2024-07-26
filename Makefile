@@ -53,7 +53,7 @@ LIBS = -ljson-c
 
 .PHONY: all bear clean install uninstall
 
-all: ld2json
+all: ld2json json2ld
 
 bear:
 	make clean
@@ -61,7 +61,14 @@ bear:
 
 clean:
 	- rm -f ld2json
+	- rm -f json2ld
 	- rm -f *.o
+
+json2ld : json2ld.o
+	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
+ifndef debug
+	strip $@
+endif
 
 ld2json : ld2json.o
 	$(CC) $(LDFLAGS) $(LIBS) $^ -o $@
@@ -72,9 +79,10 @@ endif
 %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-install : ld2json
+install : ld2json json2ld
 	install -m 755 ld2json $(prefix)/bin
+	install -m 755 json2ld $(prefix)/bin
 
 uninstall :
 	- rm -f $(prefix)/bin/ld2json
-
+	- rm -f $(prefix)/bin/json2ld

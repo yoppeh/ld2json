@@ -1,8 +1,11 @@
-# LD2JSON
+# LD2JSON / JSON2LD
 
 `ld2json` is a utility to convert a **Line-oriented Dataset** (LD) formatted
 document to JSON/JSONL. Input is taken from `stdin` and is written to `stdout`.
-Error and debug messages are written to `stderr`.
+Error and debug messages are written to `stderr`. You can specify an alternative
+input file on the command line: `ld2json input_filename`. You can also use the
+`-p` option to output a formatted JSON string. Of course, since JSONL is
+line-oriented, this option will result in an invalid JSONL file.
 
 Example: `cat test.ld | ./ld2json`
 
@@ -16,6 +19,8 @@ data that should be assigned to that key. The data section ends at the next key.
 
 Blank lines are not output. New lines in the input are removed in the
 output. To include a newline in the output, use the two characters `\n`.
+
+`json2ld` is the reverse process. It converts JSON and JSONL files to ld format.
 
 ## Details
 
